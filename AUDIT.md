@@ -56,10 +56,16 @@ Re-ran two fresh critics against the *fixed* code to confirm the fixes and catch
 
 **Corrected honest result: +3.4% / 56 days at 15 bps latency (Sharpe ~4, maxDD 1.6%, 432 trades), fragile to execution (→ +0.3% at 0.5% cost).** See `COPYTRADE.md`.
 
+## Third pass — verification critics F (backtest) & G (bot)
+- **Critic F (backtest):** verified the rewrite is **correct — no new code bug**; sign convention, episode reconstruction (scale-in/out/reversal), pct denominator, `heapq` release-before-entry, and full-calendar Sharpe all sound. Return +3.4%/432-trades is trustworthy and *conservative* on the point return (wins clipped, cost every trade). Honest model caveats documented: **Sharpe ~4 is optimistic** (deterministic capture of the target's exact %, no execution-noise variance → real Sharpe lower); minor upward bias from symmetric loss-cap and right-censoring. Applied: **asymmetric loss cap** (shorts may lose >100%, longs floored) — result unchanged (+3.4%, 432), confirming stability; removed a dead branch.
+- **Critic G (bot):** verified the state machine sound (bank==realized exactly, wins≤closed, no double-close/KeyError, atomic `.bak` persistence, tid-idempotent replay, flock auto-release, bounded growth, all urlopen timed out). Found **one real MEDIUM bug the 2-strike fix introduced**: `close_paper` didn't clear `orphan_strikes[key]`, so a strike accrued by reconcile then cleared by a *normal* close could taint a later reopen of the same coin → premature close. **Fixed** (`pop` in `close_paper`) + test 34. Also bumped persisted `recent_opens` cap to 5000 (consensus-window truncation, LOW).
+
+**Convergence:** bug severity decayed across rounds (round 1 many money-path bugs → round 2 one critical backtest bug → round 3 one peripheral strike-cleanup edge). All fixes are covered by tests; a final verification pass confirmed clean.
+
 ## Stress / fuzz (`stress_copybot.py`) — 20,000 adversarial fills, PASS
 Random reversals, same-ms clusters, and malformed fills (missing coin/sz/px/startPosition, non-numeric, unknown dir) fed through the fill pipeline: **0 crashes**, all invariants hold (bank finite & not absurdly negative, open ≤ concurrency cap, closed ≥ wins, history capped, every open position well-formed, realized ≈ bank−1000), reconcile clears all to flat, state round-trips.
 
-## Test suite (`simulate_copybot.py`) — 53 assertions, all green
+## Test suite (`simulate_copybot.py`) — 56 assertions, all green
 open/close long & short · partial-close-holds · full-close · reversal · reversal-at-cap · scale-in-no-double · missing-mid-open-skip · missing-mid-close-proxy · short loss floor · concurrency cap · min-notional · pause · spot-ignored · consensus (dust-excluded, bootstrap) · maxDD/peak · restart-resume · ruin guard · history cap · blocklist · two-coins-independent · close-without-open no-op · **same-ms ordering** · **tid idempotency** · **cross-poll overlap** · **corrupt-state `.bak` recovery** · **orphan reconcile (+ fail-safe on API error)**.
 
 ## Honest residual limitations
