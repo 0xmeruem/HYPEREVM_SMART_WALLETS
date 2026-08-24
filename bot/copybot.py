@@ -229,6 +229,7 @@ def close_paper(st, mids, key, now_ms, fill_px=None):
     if len(hist) > STRAT["history_cap"]:
         del hist[:len(hist) - STRAT["history_cap"]]
     del st["open"][key]
+    st.get("orphan_strikes", {}).pop(key, None)   # clear any reconcile strike on this key (normal close)
     emoji = "✅" if pnl > 0 else "🔻"
     wr = st["wins"] / st["closed"] if st["closed"] else 0
     tg_send(f"{emoji} <b>CLOSE {pos['side']} {esc(pos['coin'])}</b>  {pnl:+,.2f}$\n{notional:,.0f}$ {entry:g}→{mid:g} · held {hold_m:.0f}m\n<b>bank ${st['bank']:,.2f}</b> ({(st['bank']/BANK0-1)*100:+.1f}%) · realized ${st['realized']:+,.0f} · WR {wr*100:.0f}% ({st['closed']})")
@@ -482,7 +483,7 @@ def main():
                     reconcile(st, mids, int(time.time() * 1000))
                 except Exception as e:
                     log(f"reconcile err {e}")
-            st["recent_opens"] = recent_opens[-2000:]   # persist consensus history
+            st["recent_opens"] = recent_opens[-5000:]   # persist consensus history (match in-mem cap)
             try:
                 save_state(st)
             except Exception as e:
