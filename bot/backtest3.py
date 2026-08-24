@@ -55,23 +55,21 @@ for (w, coin), fl in fills.items():
             entry_ts = ts; entry_ntl = abs(d) * px; realized = pnl; open_ep = True
             continue
         if not open_ep:
-            # not tracking (e.g. bot-equivalent started mid-position) — only start on a clean flat->open
-            if flat_before and not flat_after:
-                entry_ts = ts; entry_ntl = abs(d) * px; realized = pnl; open_ep = True
+            # not tracking (started mid-position / opened before data window) — wait for a clean flat->open
             continue
         # (b) within an episode
         if reversal:
             realized += pnl                      # this fill closes the old side
             if entry_ntl >= MIN_NTL:
                 positions.append({"w": w, "entry_ts": entry_ts, "exit_ts": ts,
-                                  "pct": max(-PCT_CAP, min(PCT_CAP, realized / entry_ntl)), "entry_ntl": entry_ntl})
+                                  "pct": max(-3.0, min(PCT_CAP, realized / entry_ntl)), "entry_ntl": entry_ntl})
             # residual opens a new opposite episode
             entry_ts = ts; entry_ntl = abs(new) * px; realized = 0.0; open_ep = True
         elif flat_after:
             realized += pnl
             if entry_ntl >= MIN_NTL:
                 positions.append({"w": w, "entry_ts": entry_ts, "exit_ts": ts,
-                                  "pct": max(-PCT_CAP, min(PCT_CAP, realized / entry_ntl)), "entry_ntl": entry_ntl})
+                                  "pct": max(-3.0, min(PCT_CAP, realized / entry_ntl)), "entry_ntl": entry_ntl})
             entry_ts = None; entry_ntl = 0.0; realized = 0.0; open_ep = False
         else:
             realized += pnl
