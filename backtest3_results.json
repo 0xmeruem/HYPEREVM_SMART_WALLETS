@@ -1,0 +1,78 @@
+{
+ "results": {
+  "2pct_hc0bps": {
+   "final": 1035.77,
+   "ret": 3.6,
+   "sharpe": 1.78,
+   "maxdd": 0.6,
+   "win": 0.512,
+   "trades": 82
+  },
+  "2pct_hc5bps": {
+   "final": 1034.92,
+   "ret": 3.5,
+   "sharpe": 1.74,
+   "maxdd": 0.6,
+   "win": 0.5,
+   "trades": 82
+  },
+  "2pct_hc15bps": {
+   "final": 1033.24,
+   "ret": 3.3,
+   "sharpe": 1.68,
+   "maxdd": 0.7,
+   "win": 0.476,
+   "trades": 82
+  },
+  "2pct_hc30bps": {
+   "final": 1030.71,
+   "ret": 3.1,
+   "sharpe": 1.57,
+   "maxdd": 0.7,
+   "win": 0.439,
+   "trades": 82
+  },
+  "2pct_hc50bps": {
+   "final": 1027.35,
+   "ret": 2.7,
+   "sharpe": 1.43,
+   "maxdd": 0.8,
+   "win": 0.354,
+   "trades": 82
+  },
+  "10permil_hc15": {
+   "final": 1016.61,
+   "ret": 1.7,
+   "sharpe": 1.65,
+   "maxdd": 0.3,
+   "win": 0.476,
+   "trades": 82
+  },
+  "15permil_hc15": {
+   "final": 1024.92,
+   "ret": 2.5,
+   "sharpe": 1.66,
+   "maxdd": 0.5,
+   "win": 0.476,
+   "trades": 82
+  },
+  "20permil_hc15": {
+   "final": 1033.24,
+   "ret": 3.3,
+   "sharpe": 1.68,
+   "maxdd": 0.7,
+   "win": 0.476,
+   "trades": 82
+  },
+  "30permil_hc15": {
+   "final": 1049.87,
+   "ret": 5.0,
+   "sharpe": 1.7,
+   "maxdd": 1.0,
+   "win": 0.476,
+   "trades": 82
+  }
+ },
+ "n_positions": 1537,
+ "span_days": 53
+}
