@@ -248,7 +248,7 @@ def process_fill(st, mids, w, f, paused=False):
     delta = signed_delta(direction, sz)
     if delta == 0:
         return   # spot / funding / non-position fill
-    now_ms = int(f.get("time", time.time() * 1000))
+    now_ms = _i(f.get("time", 0)) or int(time.time() * 1000)
     key = f"{w}:{coin}"
     sp = f.get("startPosition")
     try:
@@ -314,6 +314,7 @@ def reconcile(st, mids, now_ms):
     by_wallet = {}
     for key, pos in list(st["open"].items()):
         by_wallet.setdefault(pos["wallet"], []).append((key, pos))
+    strikes = st.setdefault("orphan_strikes", {})
     for w, poslist in by_wallet.items():
         held, ok = get_positions(w)
         if not ok:
@@ -323,20 +324,36 @@ def reconcile(st, mids, now_ms):
             target_side = None
             if szi is not None:
                 target_side = "LONG" if szi > 0 else "SHORT"
-            # orphan if target is flat (not held) OR flipped opposite to our side
             if target_side is None or target_side != pos["side"]:
-                log(f"reconcile: closing orphan {key} (target now {target_side or 'FLAT'})")
-                close_paper(st, mids, key, now_ms)
+                # 2-strike: require two consecutive orphan observations before closing
+                # (guards against a transient API blip or any coin-name divergence)
+                strikes[key] = strikes.get(key, 0) + 1
+                if strikes[key] >= 2:
+                    log(f"reconcile: closing orphan {key} (target now {target_side or 'FLAT'})")
+                    close_paper(st, mids, key, now_ms)
+                    strikes.pop(key, None)
+            else:
+                strikes.pop(key, None)   # target still holds matching side -> reset
         time.sleep(0.2)
+    # drop strikes for positions no longer open
+    for k in list(strikes):
+        if k not in st["open"]:
+            strikes.pop(k, None)
 
 # ---------------- per-wallet fill batch (sort + tid-dedup) — testable ----------------
+def _i(x):
+    try:
+        return int(x)
+    except Exception:
+        return 0
+
 def process_wallet_fills(st, mids, w, fills, paused=False):
     if not fills:
         return
-    fills = sorted(fills, key=lambda f: (int(f.get("time", 0)), int(f.get("tid", 0))))
+    fills = sorted(fills, key=lambda f: (_i(f.get("time", 0)), _i(f.get("tid", 0))))   # safe: malformed can't stall
     last_tid = st.setdefault("last_tid", {}).get(w, 0)
     for f in fills:
-        tid = int(f.get("tid", 0))
+        tid = _i(f.get("tid", 0))
         if tid and tid <= last_tid:
             continue
         try:
@@ -345,7 +362,7 @@ def process_wallet_fills(st, mids, w, fills, paused=False):
             log(f"process_fill err {w[:10]} {e}")
         if tid:
             st["last_tid"][w] = max(st["last_tid"].get(w, 0), tid)
-        st["last_ms"][w] = max(st["last_ms"].get(w, 0), int(f.get("time", 0)))
+        st["last_ms"][w] = max(st["last_ms"].get(w, 0), _i(f.get("time", 0)))
 
 # ---------------- Telegram command handler ----------------
 HELP = ("🤖 <b>HyperCopy paper bot</b>\n"
@@ -395,7 +412,7 @@ def handle_commands(st):
             tg("sendMessage", {"chat_id": cid, "parse_mode": "HTML", "text":
                 f"mode <b>{STRAT['mode']}</b>\nsize {STRAT['frac']*100:.0f}% of bank/trade (cap {STRAT['per_trade_cap']*100:.0f}%)\nmax concurrent {STRAT['max_concurrent']}\nround-trip cost {STRAT['cost']*100:.2f}%\nsafe consensus k={STRAT['consensus_k']}"})
         elif cmd == "/mode":
-            parts = text.split()
+            parts = text.lower().split()
             if len(parts) > 1 and parts[1] in ("growth", "safe"):
                 STRAT["mode"] = parts[1]; tg("sendMessage", {"chat_id": cid, "text": f"mode set to {parts[1]}"})
             else:
