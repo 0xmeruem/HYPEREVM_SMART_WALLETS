@@ -1,0 +1,119 @@
+{
+ "results": {
+  "F01_fixed_$20": {
+   "final": 2232.39,
+   "ret_pct": 123.2,
+   "sharpe": 13.79,
+   "maxdd_pct": 8.1,
+   "winrate": 0.663,
+   "trades": 1876,
+   "fees": 26.3,
+   "avg_pnl_per_trade": 0.657
+  },
+  "F02_fixed_$40": {
+   "final": 3091.95,
+   "ret_pct": 209.2,
+   "sharpe": 14.31,
+   "maxdd_pct": 7.8,
+   "winrate": 0.667,
+   "trades": 1506,
+   "fees": 42.2,
+   "avg_pnl_per_trade": 1.389
+  },
+  "F03_fixed_$25_consensus2": {
+   "final": 1221.41,
+   "ret_pct": 22.1,
+   "sharpe": 11.25,
+   "maxdd_pct": 0.7,
+   "winrate": 0.724,
+   "trades": 243,
+   "fees": 4.3,
+   "avg_pnl_per_trade": 0.911
+  },
+  "F04_fixed_$40_topsel": {
+   "final": 2556.61,
+   "ret_pct": 155.7,
+   "sharpe": 12.7,
+   "maxdd_pct": 7.5,
+   "winrate": 0.629,
+   "trades": 647,
+   "fees": 18.1,
+   "avg_pnl_per_trade": 2.406
+  },
+  "R05_frac_1pct": {
+   "final": 1848.28,
+   "ret_pct": 84.8,
+   "sharpe": 14.27,
+   "maxdd_pct": 5.9,
+   "winrate": 0.663,
+   "trades": 1876,
+   "fees": 17.7,
+   "avg_pnl_per_trade": 0.452
+  },
+  "R06_frac_2pct": {
+   "final": 3105.51,
+   "ret_pct": 210.6,
+   "sharpe": 14.47,
+   "maxdd_pct": 8.1,
+   "winrate": 0.667,
+   "trades": 1678,
+   "fees": 42.2,
+   "avg_pnl_per_trade": 1.255
+  },
+  "R07_frac_2pct_consensus2": {
+   "final": 1164.21,
+   "ret_pct": 16.4,
+   "sharpe": 10.14,
+   "maxdd_pct": 0.7,
+   "winrate": 0.739,
+   "trades": 199,
+   "fees": 3.1,
+   "avg_pnl_per_trade": 0.825
+  },
+  "R08_frac_3pct_topsel": {
+   "final": 3180.64,
+   "ret_pct": 218.1,
+   "sharpe": 12.6,
+   "maxdd_pct": 8.4,
+   "winrate": 0.629,
+   "trades": 647,
+   "fees": 23.6,
+   "avg_pnl_per_trade": 3.37
+  },
+  "R09_frac_1.5pct_conc10": {
+   "final": 2077.83,
+   "ret_pct": 107.8,
+   "sharpe": 14.66,
+   "maxdd_pct": 4.8,
+   "winrate": 0.671,
+   "trades": 1365,
+   "fees": 20.4,
+   "avg_pnl_per_trade": 0.79
+  },
+  "R10_frac_2pct_consensus3": {
+   "final": 1006.34,
+   "ret_pct": 0.6,
+   "sharpe": 24.57,
+   "maxdd_pct": 0.0,
+   "winrate": 0.889,
+   "trades": 18,
+   "fees": 0.3,
+   "avg_pnl_per_trade": 0.352
+  }
+ },
+ "ranked": [
+  "R10_frac_2pct_consensus3",
+  "R06_frac_2pct",
+  "F02_fixed_$40",
+  "R09_frac_1.5pct_conc10",
+  "R05_frac_1pct",
+  "F01_fixed_$20",
+  "R08_frac_3pct_topsel",
+  "F04_fixed_$40_topsel",
+  "F03_fixed_$25_consensus2",
+  "R07_frac_2pct_consensus2"
+ ],
+ "test_days": 56,
+ "sel_wallets": 57,
+ "test_trades": 2889
+}
