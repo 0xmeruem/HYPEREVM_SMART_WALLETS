@@ -85,11 +85,12 @@ inv("every open pos well-formed", all(set(p) >= {"coin", "side", "entry", "notio
 inv("gross_win/gross_loss non-negative", st["gross_win"] >= 0 and st["gross_loss"] >= 0)
 inv("realized ~ bank-1000 within fp", abs(st["realized"] - (st["bank"] - 1000.0)) < 1.0)
 
-# now reconcile everything to flat using a stub (target all flat) -> must not crash, closes all
+# now reconcile everything to flat using a stub (target all flat) -> must not crash, closes all (2-strike)
 cb.get_positions = lambda w: ({}, True)
 try:
-    cb.reconcile(st, mids_for(t), t + 1)
-    inv("reconcile clears all to flat", len(st["open"]) == 0)
+    cb.reconcile(st, mids_for(t), t + 1)      # strike 1
+    cb.reconcile(st, mids_for(t), t + 2)      # strike 2 -> close
+    inv("reconcile clears all to flat (2-strike)", len(st["open"]) == 0)
 except Exception as e:
     ok = False; print("reconcile crash:", e)
 
