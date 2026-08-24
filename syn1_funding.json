@@ -1,0 +1,49 @@
+{
+ "first_in": {
+  "0x8f10b468b06c6fd214b65f87778827f7d113f996": [
+   43202574,
+   "USDC",
+   "0x7319ac5bb90164191bd236c16000fa3f1c29e456"
+  ],
+  "0x4f82e73edb06d29ff62c91ec8f5ff06571bdeb29": [
+   43202580,
+   "WHYPE",
+   "0x8f10b468b06c6fd214b65f87778827f7d113f996"
+  ],
+  "0xca9d6973a2375f8269c50c113ce57d61d4e5180c": [
+   43203299,
+   "USDT0",
+   "0x1fa40f83c12e48e9396d12dd08b4b4ee51c8c803"
+  ],
+  "0x8dd9433e6f86a035bb318a6f74ad2d3ac6731861": [
+   43203676,
+   "WHYPE",
+   "0x23ebcd701fd92867235aeb0174b7c444b9b2b3ad"
+  ],
+  "0x05008c08a20579ca5b9511f4a7b446479863e5e1": [
+   43216486,
+   "USDC",
+   "0x23ebcd701fd92867235aeb0174b7c444b9b2b3ad"
+  ],
+  "0x0e83c52fc67345ac96853f8c01ce1326d7f4a4cc": [
+   43876919,
+   "USDC",
+   "0x555ce236c0220695b68341bc48c68d52210cc35b"
+  ],
+  "0xda126ee6e37d44f9c5aa88fe74ba6ed0347173ba": [
+   43946845,
+   "USDC",
+   "0xfcacd2f51fc8fa0fe1ff3e781ce9f97584e62d99"
+  ]
+ },
+ "shared": {
+  "0x23ebcd701fd92867235aeb0174b7c444b9b2b3ad": [
+   "0x8dd9433e6f86a035bb318a6f74ad2d3ac6731861",
+   "0x05008c08a20579ca5b9511f4a7b446479863e5e1"
+  ]
+ },
+ "window_blocks": [
+  43202298,
+  44002298
+ ]
+}
