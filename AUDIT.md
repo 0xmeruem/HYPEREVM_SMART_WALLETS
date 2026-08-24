@@ -39,6 +39,9 @@ Full audit-recycle of the system: a 50-assertion deterministic test suite (`simu
 
 **Verified NOT guilty (so we didn't "fix" non-bugs):** `PCT_CAP=1.5` is inert (4/2889 trades clip); `pct = closed_pnl/notional` at 1× notional is the correct conservative copy return; the 30-min bucket dollar-weights partial closes correctly; concurrency cap frees a slot before a reversal re-opens (no false block); bank cannot go negative.
 
+## Stress / fuzz (`stress_copybot.py`) — 20,000 adversarial fills, PASS
+Random reversals, same-ms clusters, and malformed fills (missing coin/sz/px/startPosition, non-numeric, unknown dir) fed through the fill pipeline: **0 crashes**, all invariants hold (bank finite & not absurdly negative, open ≤ concurrency cap, closed ≥ wins, history capped, every open position well-formed, realized ≈ bank−1000), reconcile clears all to flat, state round-trips.
+
 ## Test suite (`simulate_copybot.py`) — 50 assertions, all green
 open/close long & short · partial-close-holds · full-close · reversal · reversal-at-cap · scale-in-no-double · missing-mid-open-skip · missing-mid-close-proxy · short loss floor · concurrency cap · min-notional · pause · spot-ignored · consensus (dust-excluded, bootstrap) · maxDD/peak · restart-resume · ruin guard · history cap · blocklist · two-coins-independent · close-without-open no-op · **same-ms ordering** · **tid idempotency** · **cross-poll overlap** · **corrupt-state `.bak` recovery** · **orphan reconcile (+ fail-safe on API error)**.
 
