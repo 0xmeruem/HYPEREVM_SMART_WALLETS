@@ -30,23 +30,27 @@ An earlier pass (`backtest2.py`) reported +211% — **that number was wrong** (s
 3. **Latency/slippage** haircut swept (you enter *after* the target, as a taker).
 4. **Full-calendar daily equity** for Sharpe (carry bank on flat days) — kills the fake Sharpe ~14.
 
-**Honest out-of-sample result — 2%-of-bank, capital-reserved, train-selected (test ≈53 days, 82 trades, ~1.5/day):**
+**Honest out-of-sample result — 2%-of-bank, capital-reserved, train-selected (test 56 days, 2,311 positions reconstructed, 432 trades actually fit ≈ 7.7/day, median hold ~12h):**
 
 | Latency haircut | Final $ | Return | Sharpe | maxDD | Winrate |
 |---|---|---|---|---|---|
-| 0.00% | $1,036 | +3.6% | 1.78 | 0.6% | 51% |
-| **0.15% (realistic)** | **$1,033** | **+3.3%** | **1.68** | **0.7%** | 48% |
-| 0.50% (harsh) | $1,027 | +2.7% | 1.43 | 0.8% | 35% |
+| 0.00% | $1,047 | +4.7% | 5.42 | 1.5% | 61% |
+| **0.15% (realistic)** | **$1,034** | **+3.4%** | **3.97** | **1.6%** | 55% |
+| 0.30% | $1,020 | +2.0% | 2.46 | 1.7% | 46% |
+| 0.50% (harsh) | $1,003 | +0.3% | 0.39 | 2.2% | 40% |
 
-Sizing sensitivity at 0.15% haircut: 1% → +1.7%, 1.5% → +2.5%, **2% → +3.3%**, 3% → +5.0% (maxDD 1.0%).
+Sizing sensitivity at 0.15% haircut: 1% → +1.7%, 1.5% → +2.5%, **2% → +3.4%**, 3% → +5.1% (maxDD 2.4%).
 
-**The real edge is modest but positive and low-risk: ≈ +3% over ~2 months (~20%/yr), Sharpe ≈1.7, max drawdown <1%.** Not the +211% fantasy. Chosen: **`growth` = 2% of bank/trade** (your "enter every trade at %"), with **`safe`** (consensus-2) as an even more conservative option (`/mode safe`).
+**The real edge is modest, positive and low-risk: ≈ +3.4% over ~2 months (~25%/yr) at realistic execution, Sharpe ≈4, max drawdown <2%.** Not the +211% fantasy — that was a broken simulator (a heap-release bug stranded capital and a survivorship-biased pool). Chosen: **`growth` = 2% of bank/trade** (your "enter every trade at %"), with **`safe`** (consensus-2) as an even more conservative option (`/mode safe`).
+
+**⚠️ The edge is FRAGILE to execution quality** — at a harsh 0.5% round-trip cost it nearly vanishes (+0.3%, Sharpe 0.39). Copytrading these ~12h-hold swing traders works only if you enter close to their price; a bot that lags badly or trades illiquid alts loses the edge. Prefer their liquid-coin trades.
 
 ## Devil's advocate / pre-mortem
 
-- **Why so much lower than the +211%?** That figure sequentially compounded 1,678 non-overlapping trades — impossible with $1k and 24 h holds — and used a winner pool chosen with hindsight. Both are removed here.
-- **Regime.** Even this 53-day test leaned on a rising market. In chop/down, +3% can go negative. Sharpe 1.7 and <1% DD are reassuring but not a promise.
-- **Capital constraint is the real limit.** With 24 h median holds, a $1,000 book fills its ~15 slots fast and skips most signals — the return is gated by capital, not by the wallets' skill. A bigger bank takes more trades (but then slippage grows).
+- **Why so much lower than the +211%?** That figure sequentially compounded 1,678 non-overlapping trades — impossible with $1k and multi-hour holds — and used a winner pool chosen with hindsight. Both removed here: capital-reserved sizing fits **432** trades of **2,311** reconstructed positions, on a **train-only** universe.
+- **Regime.** The 56-day test leaned on a rising market. In chop/down, +3.4% can go negative. Sharpe ~4 and <2% DD are reassuring but not a promise.
+- **Execution is the whole game.** At 0.15% round-trip the edge is +3.4%; at 0.5% it's +0.3%. If the bot lags the target or trades thin alts, you lose it. The ~12h median hold helps (you have time to enter well), but fast movers on illiquid coins are traps.
+- **Capital constraint.** A $1,000 book fills its ~15 slots and skips signals; return is gated by capital, not just skill. A bigger bank takes more trades but moves the market.
 - **Core data ends 2026-08-16**, so the backtest can't see blow-ups after that; the *live* bot has no such blind spot (it trades forward in real time).
 - Mitigations: per-trade ≤25% bank, ≤15 concurrent, capital reserved off free cash, 0.95+ winrate & HFT/millions-tx wallets excluded, paper-only until you add a key.
 
@@ -57,4 +61,4 @@ Sizing sensitivity at 0.15% haircut: 1% → +1.7%, 1.5% → +2.5%, **2% → +3.3
 - 50-assertion test suite (`simulate_copybot.py`) — all green on the box.
 - To go **live**: add an HL agent-wallet key and swap the paper open/close for `exchange.order(...)`; sizing/logic unchanged.
 
-*Reproducible from `positions_test.tsv.gz` + `backtest3.py`; universe `train_universe`. Test window UTC 2026-06-20…08-13 (last 3 days dropped to a transient pull error — logged, not hidden).*
+*Reproducible from `positions_test.tsv.gz` + `backtest3.py` (position reconstruction in contracts via `start_position`; capital-reserved sim with `heapq`); universe `train_universe`. Test window UTC 2026-06-21…08-16 (56 days, full).*
