@@ -39,10 +39,27 @@ Full audit-recycle of the system: a 50-assertion deterministic test suite (`simu
 
 **Verified NOT guilty (so we didn't "fix" non-bugs):** `PCT_CAP=1.5` is inert (4/2889 trades clip); `pct = closed_pnl/notional` at 1× notional is the correct conservative copy return; the 30-min bucket dollar-weights partial closes correctly; concurrency cap frees a slot before a reversal re-opens (no false block); bank cannot go negative.
 
+## Second pass — verification critics (D on the bot, E on the backtest)
+Re-ran two fresh critics against the *fixed* code to confirm the fixes and catch regressions.
+
+**Critic D (bot) — verified all 12 fixes correct, found 3 minor items, all fixed:**
+- D1 reconcile trusted the coin string across 3 HL endpoints → verified HL is consistent (BTC/ETH identical in userFills/clearinghouseState/allMids); added a **2-strike** guard anyway (close an orphan only after 2 consecutive flat observations) — defends against any transient/naming false positive.
+- D2 a non-numeric `time`/`tid` could throw in the batch sort and stall a wallet forever → all int coercions now go through a safe `_i()`; a self-test (26g) proved a malformed fill no longer crashes or stalls (this caught a real residual `int()` on the `last_ms` update).
+- D3 `/mode Safe` case-sensitivity → lowercased.
+- Confirmed sound: PnL/short-floor/bank, atomic save + `.bak` recovery (survives kill between the two renames), flock freed on kill-9, 429 backoff, HTML escaping.
+
+**Critic E (backtest) — found a CRITICAL simulator bug; rebuilt:**
+- E1 **`open_pos.pop(0)` on a `heapq` heap** didn't re-heapify → capital stranded, releases out of order → **only 82 of ~430 trades fit and Sharpe/DD were garbage.** Fixed to `heapq.heappop` → **432 trades** (matches E's independent ~422 estimate).
+- E2 positions were tracked in **USD notional** (drifts with price) → episode boundaries wrong on multi-fill positions. Rebuilt reconstruction in **contracts via `start_position`** (exact flat crossings, correct reversals).
+- E3 Sharpe calendar now padded SPLIT→test-end; E4 fixed the paper-notional floor ($1, not the target's $50 dust filter) and swept latency.
+- Verified correct: OOS design (universe frozen on train-window tsv, tested on post-SPLIT entries), 2%-compounding can't explode, no fee double-count, train-window filter scaling ~proportional.
+
+**Corrected honest result: +3.4% / 56 days at 15 bps latency (Sharpe ~4, maxDD 1.6%, 432 trades), fragile to execution (→ +0.3% at 0.5% cost).** See `COPYTRADE.md`.
+
 ## Stress / fuzz (`stress_copybot.py`) — 20,000 adversarial fills, PASS
 Random reversals, same-ms clusters, and malformed fills (missing coin/sz/px/startPosition, non-numeric, unknown dir) fed through the fill pipeline: **0 crashes**, all invariants hold (bank finite & not absurdly negative, open ≤ concurrency cap, closed ≥ wins, history capped, every open position well-formed, realized ≈ bank−1000), reconcile clears all to flat, state round-trips.
 
-## Test suite (`simulate_copybot.py`) — 50 assertions, all green
+## Test suite (`simulate_copybot.py`) — 53 assertions, all green
 open/close long & short · partial-close-holds · full-close · reversal · reversal-at-cap · scale-in-no-double · missing-mid-open-skip · missing-mid-close-proxy · short loss floor · concurrency cap · min-notional · pause · spot-ignored · consensus (dust-excluded, bootstrap) · maxDD/peak · restart-resume · ruin guard · history cap · blocklist · two-coins-independent · close-without-open no-op · **same-ms ordering** · **tid idempotency** · **cross-poll overlap** · **corrupt-state `.bak` recovery** · **orphan reconcile (+ fail-safe on API error)**.
 
 ## Honest residual limitations
