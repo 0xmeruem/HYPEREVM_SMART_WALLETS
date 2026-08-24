@@ -198,18 +198,34 @@ cb.process_fill(st, MIDS, "0xr1", fill("BTC", "Open Long", 10, 100, 0))
 cb.process_fill(st, MIDS, "0xr2", fill("ETH", "Open Short", 10, 50, 0))
 _orig = cb.get_positions
 cb.get_positions = lambda w: (({}, True) if w == "0xr1" else ({"ETH": -10.0}, True))  # r1 flat, r2 still short
-cb.reconcile(st, {"BTC": "100", "ETH": "50"}, 2000)
-check("26a reconcile closed orphan r1", "0xr1:BTC" not in st["open"])
-check("26b reconcile kept matched r2", "0xr2:ETH" in st["open"])
-# fail-safe: API error -> keep
+cb.reconcile(st, {"BTC": "100", "ETH": "50"}, 2000)   # strike 1 for r1
+check("26a 2-strike: orphan r1 NOT closed on first pass", "0xr1:BTC" in st["open"])
+cb.reconcile(st, {"BTC": "100", "ETH": "50"}, 2500)   # strike 2 for r1 -> close
+check("26b orphan r1 closed on second consecutive pass", "0xr1:BTC" not in st["open"])
+check("26c reconcile kept matched r2", "0xr2:ETH" in st["open"])
+# fail-safe: API error -> keep + do not accrue strike
 cb.get_positions = lambda w: ({}, False)
 cb.reconcile(st, {"ETH": "50"}, 3000)
-check("26c reconcile fail-safe keeps r2 on API error", "0xr2:ETH" in st["open"])
-# orphan by reversal: target now opposite side -> close
-cb.get_positions = lambda w: ({"ETH": +10.0}, True)  # r2 flipped to LONG, we hold SHORT
-cb.reconcile(st, {"ETH": "50"}, 4000)
-check("26d reconcile closes reversed orphan", "0xr2:ETH" not in st["open"])
+check("26d reconcile fail-safe keeps r2 on API error", "0xr2:ETH" in st["open"])
+# reset strike when target still holds: one orphan pass then a holding pass -> no close on next orphan-once
+cb.get_positions = lambda w: ({"ETH": -10.0}, True)   # r2 still short (matches)
+cb.reconcile(st, {"ETH": "50"}, 3500)
+check("26e strike reset while holding", st.get("orphan_strikes", {}).get("0xr2:ETH", 0) == 0)
+# reversal orphan needs 2 strikes too
+cb.get_positions = lambda w: ({"ETH": +10.0}, True)  # r2 flipped LONG, we hold SHORT
+cb.reconcile(st, {"ETH": "50"}, 4000); cb.reconcile(st, {"ETH": "50"}, 4500)
+check("26f reversed orphan closed after 2 strikes", "0xr2:ETH" not in st["open"])
 cb.get_positions = _orig
+
+# 26g. malformed time/tid in batch does not crash the sort or stall
+reset_strat(); st = fresh()
+bad = {"coin": "BTC", "dir": "Open Long", "sz": "10", "px": "100", "startPosition": "0", "time": "oops", "tid": None}
+good = fill("BTC", "Close Long", 10, 110, 10, t=9000, tid=999)
+try:
+    cb.process_wallet_fills(st, {"BTC": "110"}, "0xbad", [bad, good])
+    check("26g malformed time/tid handled without crash", True)
+except Exception as e:
+    check("26g malformed time/tid handled without crash", False)
 
 # 27. backfill cap logic: max(saved, now-30min)
 now_ms = 100_000_000
