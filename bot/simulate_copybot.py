@@ -227,6 +227,20 @@ try:
 except Exception as e:
     check("26g malformed time/tid handled without crash", False)
 
+# 34. strike cleanup on normal close (Critic G bug): a strike must not survive a normal close and taint a reopen
+reset_strat(); st = fresh()
+_o = cb.get_positions
+cb.process_fill(st, MIDS, "0xs1", fill("BTC", "Open Long", 10, 100, 0, t=1000))
+cb.get_positions = lambda w: ({}, True)          # target flat
+cb.reconcile(st, MIDS, 2000)                       # strike 1 (2-strike: not closed)
+check("34a strike accrued, position still open", st["orphan_strikes"].get("0xs1:BTC") == 1 and "0xs1:BTC" in st["open"])
+cb.process_fill(st, {"BTC": "110"}, "0xs1", fill("BTC", "Close Long", 10, 110, 10, t=2500))  # NORMAL close
+check("34b normal close clears the strike", "0xs1:BTC" not in st.get("orphan_strikes", {}))
+cb.process_fill(st, MIDS, "0xs1", fill("BTC", "Open Long", 10, 100, 0, t=3000))  # reopen
+cb.reconcile(st, MIDS, 4000)                       # fresh strike 1 -> must NOT close
+check("34c reopen not tainted by stale strike (single obs doesn't close)", "0xs1:BTC" in st["open"])
+cb.get_positions = _o
+
 # 27. backfill cap logic: max(saved, now-30min)
 now_ms = 100_000_000
 floor = now_ms - 30*60*1000
