@@ -43,6 +43,8 @@ Sizing sensitivity at 0.15% haircut: 1% → +1.7%, 1.5% → +2.5%, **2% → +3.4
 
 **The real edge is modest, positive and low-risk: ≈ +3.4% over ~2 months (~25%/yr) at realistic execution, Sharpe ≈4, max drawdown <2%.** Not the +211% fantasy — that was a broken simulator (a heap-release bug stranded capital and a survivorship-biased pool). Chosen: **`growth` = 2% of bank/trade** (your "enter every trade at %"), with **`safe`** (consensus-2) as an even more conservative option (`/mode safe`).
 
+**⚠️ Sharpe ~4 is optimistic.** The backtest assumes I capture each target's *exact realized %* with zero execution-noise variance — real fills add slippage variance that lowers the true Sharpe well below 4. Trust the **return** (~+3.4%, and conservative — wins are clipped, costs charged every trade); treat the Sharpe as a ceiling.
+
 **⚠️ The edge is FRAGILE to execution quality** — at a harsh 0.5% round-trip cost it nearly vanishes (+0.3%, Sharpe 0.39). Copytrading these ~12h-hold swing traders works only if you enter close to their price; a bot that lags badly or trades illiquid alts loses the edge. Prefer their liquid-coin trades.
 
 ## Devil's advocate / pre-mortem
